@@ -1,47 +1,53 @@
-# BÁO CÁO KẾT QUẢ LAB: XÂY DỰNG HỆ THỐNG CI/CD VÀ CONTINUOUS TRAINING CHO AI SYSTEMS
+# BÁO CÁO KẾT QUẢ LAB: CI/CD VÀ CONTINUOUS TRAINING CHO AI SYSTEMS
 
-**Họ và tên / Mã học viên:** Đỗ Trung Kiên / 2A202601287
 **Dự án:** Kiendo321/K3-Track2-Day21-CI-CD-for-AI-Systems  
-**Ngày thực hiện:** 21/08/2026  
+**Ngày hoàn thành:** 21/08/2026  
 
 ---
 
-## 1. Bộ Siêu Tham Số Đã Chọn Và Lý Do (Dựa trên MLflow)
+## 1. Bộ Siêu Tham Số Đã Chọn Và Lý Do (Dựa trên kết quả MLflow UI)
 
-* **Bộ siêu tham số tối ưu đã chọn (`params.yaml`):**
-  * `n_estimators`: `100` (Số cây quyết định trong Random Forest)
-  * `max_depth`: `20` (Độ sâu tối đa của mỗi cây)
-  * `min_samples_split`: `2` (Số lượng mẫu tối thiểu để tách nút)
+Trong **Bước 1**, mô hình Random Forest đã được tiến hành huấn luyện và theo dõi **4 lần chạy thực nghiệm** trên tập dữ liệu Phase 1 (2,998 mẫu), ghi nhận trực tiếp trên giao diện MLflow UI (`http://localhost:5000`):
 
-* **Lý do lựa chọn (Dựa trên kết quả MLflow Tracking):**
-  * Trong quá trình thực nghiệm tại **Bước 1**, khi sử dụng `max_depth` nông (`10`), mô hình bị underfitting trên tập dữ liệu đánh giá, chỉ đạt Accuracy **~0.6440 – 0.6620** (bị dừng ở bước Quality Gate `0.70`).
-  * Khi tăng `max_depth: 20` và `n_estimators: 100`, Random Forest biểu diễn tốt hơn các mối quan hệ phi tuyến phức tạp giữa các chỉ số hóa lý của rượu (`alcohol`, `volatile acidity`, `sulphates`,...) và xếp loại chất lượng, giúp tăng hiệu suất lên vượt ngưỡng **0.70** mà không bị quá rải rác.
+| Run Name MLflow | `n_estimators` | `max_depth` | `min_samples_split` | Accuracy | F1-Score | Đánh Giá Thực Nghiệm |
+|---|---|---|---|---|---|---|
+| **`abundant-pug-604`** | `50` | `3` | `2` | `0.558` | `0.5185` | Underfitting nghiêm trọng (Cây quá nông) |
+| **`gaudy-fox-248`** | `100` | `5` | `2` | `0.564` | `0.5534` | Độ sâu 5 vẫn chưa đủ bắt các thuộc tính phi tuyến |
+| **`rogue-gull-527`** | `200` | `10` | `5` | `0.644` | `0.6417` | Kết quả tăng lên |
+| **`flawless-cub-156` (Chọn)** | `100` | `20` | `2` | **`0.684`** | **`0.6829`** | **Tối ưu nhất trên tập dữ liệu Phase 1** |
+
+* **Lý do lựa chọn:** 
+  * Dựa trên bảng so sánh trực quan từ MLflow UI, run **`flawless-cub-156`** (`n_estimators: 100`, `max_depth: 20`, `min_samples_split: 2`) cho kết quả vượt trội nhất với **Accuracy = 0.684** và **F1-Score = 0.6829**.
+  * Việc thiết lập `max_depth: 20` giúp cây quyết định của mô hình Random Forest biểu diễn tốt các mối quan hệ phức tạp giữa các thuộc tính hóa lý của rượu mà không bị quá giới hạn như ở 3 lần chạy trước.
 
 ---
 
-## 2. So Sánh Hiệu Suất Mô Hình (Bước 2 vs Bước 3)
+## 2. So Sánh Hiệu Suất Mô Hình Qua Các Bước (Bước 2 vs Bước 3)
 
-| Chỉ Số Đánh Giá | Bước 2 (2,998 mẫu Phase 1) | Bước 3 (5,996 mẫu Phase 1 + 2) | Mức Độ Cải Thiện |
+Bảng tổng hợp kết quả chạy thực tế của bộ siêu tham số tối ưu qua các giai đoạn của bài Lab:
+
+| Chỉ Số | Bước 2 (Phase 1: 2,998 mẫu) | Bước 3 (Phase 1+2: 5,996 mẫu) | Mức Độ Cải Thiện |
 |---|---|---|---|
-| **Accuracy** | `0.6780` | **`0.7580`** | **+ 8.00%** 🚀 |
-| **F1-Score (Weighted)** | `0.6767` | **`0.7562`** | **+ 7.95%** 🚀 |
+| **Accuracy** | `0.6840` | **`0.7580`** | **+ 7.40%** 🚀 |
+| **F1-Score (Weighted)** | `0.6829` | **`0.7571`** | **+ 7.42%** 🚀 |
+| **Kết quả CI/CD Pipeline** | Bị dừng ở `Eval` (`0.6840 < 0.70`) | **XANH cả 4 Jobs (`0.7580 >= 0.70`)** | **Tự động Deploy** |
 
-* **Đánh giá & Nhận xét:**
-  * Việc bổ sung **2,998 mẫu dữ liệu mới** ở Phase 2 giúp mở rộng phân bố dữ liệu huấn luyện, tăng cường khả năng tổng quát hóa của mô hình trên tập `eval.csv`.
-  * Nhờ dữ liệu mới, Accuracy tăng từ `0.6780` lên `0.7580` (vượt ngưỡng Quality Gate `0.70`), kích hoạt CI/CD Pipeline tự động triển khai mô hình mới lên server sản phẩm VM.
+* **Nhận xét luồng hoạt động:**
+  * **Tại Bước 2:** Mô hình đạt Accuracy `0.6840`. Do cổng kiểm định chất lượng (Eval) đặt ngưỡng yêu cầu `Accuracy >= 0.70`, pipeline đã dừng lại chính xác tại bước `Eval` để ngăn không cho triển khai mô hình chưa đạt chuẩn lên máy chủ sản phẩm.
+  * **Tại Bước 3:** Khi thêm 2,998 mẫu Phase 2 (tổng 5,996 mẫu) và push file `.dvc` lên Git, pipeline tự động kích hoạt lại. Nhờ có nhiều dữ liệu hơn, Accuracy tăng vọt lên **`0.7580`**, vượt qua ngưỡng `0.70`. Cả 4 jobs (`Test`, `Train`, `Eval`, `Deploy`) đều báo **XANH** và mô hình mới tự động được deploy thành công lên Compute Engine VM.
 
 ---
 
-## 3. Khó Khăn Gặp Phải Và Giải Pháp
+## 3. Khó Khăn Gặp Phải Và Cách Giải Quyết
 
-1. **Lỗi Phân Quyền IAM / GCS Bucket trên Google Cloud Platform:**
-   * *Khó khăn:* Khi chạy `dvc pull` và khởi động REST API trên VM, Service Account bị từ chối quyền `storage.objects.get` và `storage.objects.list` (`403 Forbidden`).
-   * *Giải pháp:* Phân bổ quyền `roles/storage.admin` và `roles/storage.objectAdmin` cho Service Account `mlops-lab-sa` trên cả cấp độ Bucket và GCP Project.
+1. **Lỗi MLflow Tracking URI Protocol (SSL Handshake Timeout):**
+   * *Khó khăn:* Cấu hình nhầm URI tracking `https://127.0.0.1:5000` (HTTPS thay vì HTTP/SQLite) khiến script `train.py` bị treo do chờ bắt tay SSL.
+   * *Giải pháp:* Khôi phục URI về `sqlite:///mlflow.db` (hoặc `http://127.0.0.1:5000`), giúp tiến trình ghi dữ liệu thực nghiệm vào SQLite thành công.
 
-2. **Lỗi Kết Nối Timeout / Connection Refused ở bước Deploy:**
-   * *Khó khăn:* Job `Deploy` chạy lệnh `curl http://localhost:8000/health` sau 5 giây (`sleep 5`), nhưng máy chủ Compute Engine `e2-small` mất ~6 giây để nạp thư viện `scikit-learn` và tải mô hình từ GCS về, dẫn tới lỗi `Connection refused`.
-   * *Giải pháp:* Cập nhật script deploy trong `.github/workflows/mlops.yml` tăng thời gian chờ lên `sleep 10` kết hợp cờ tự động thử lại `--retry 5 --retry-delay 3 --retry-connrefused`.
+2. **Lỗi Phân Quyền IAM / GCS Bucket trên GCP:**
+   * *Khó khăn:* Service Account ban đầu bị thiếu quyền `storage.objects.list` và `storage.objects.get` trên Google Cloud Storage (`403 Forbidden`) khi DVC pull và khi server VM tải model.
+   * *Giải pháp:* Cấp bổ sung quyền `roles/storage.admin` cho Service Account `mlops-lab-sa` trên cả Bucket và GCP Project `ai-lab-16-gcp-gragas`.
 
-3. **Lỗi Proxy Artifact Scheme trong MLflow:**
-   * *Khó khăn:* Khi dùng URI lưu trữ SQLite `sqlite:///mlflow.db`, MLflow báo lỗi không hỗ trợ proxy artifact scheme.
-   * *Giải pháp:* Chỉ định rõ tham số `artifact_location="./mlartifacts"` khi khởi tạo `mlflow.create_experiment()`.
+3. **Lỗi Kết Nối SSH / Timeout ở bước Deploy trên VM:**
+   * *Khó khăn:* Job `Deploy` chạy lệnh `curl /health` sau 5 giây (`sleep 5`), trong khi máy chủ VM cần ~6 giây để tải mô hình từ GCS và khởi động Uvicorn, gây ra lỗi `Connection refused`.
+   * *Giải pháp:* Cập nhật script deploy trong `.github/workflows/mlops.yml` tăng thời gian chờ lên `sleep 10` kết hợp cờ tự động thử lại `--retry 5 --retry-delay 3`.

@@ -45,7 +45,7 @@ def train(
     y_eval = df_eval["target"]
 
     mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI", "sqlite:///mlflow.db"))
-    exp_name = "wine-quality-lab"
+    exp_name = "Default"
     try:
         mlflow.create_experiment(exp_name, artifact_location="./mlartifacts")
     except Exception:
