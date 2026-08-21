@@ -11,3 +11,14 @@ sa-key.json
 __pycache__/
 *.pyc
 .DS_Store
+mlflow.db
+mlartifacts/
+models/
+outputs/
+data/train_phase1.csv
+data/eval.csv
+data/train_phase2.csv
+sa-key.json
+.env
+.venv/
+__pycache__/
