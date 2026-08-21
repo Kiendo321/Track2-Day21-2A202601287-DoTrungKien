@@ -55,7 +55,7 @@ Phần mềm cần cài đặt trên máy tính cá nhân:
 - CLI của cloud provider đã chọn (xem hướng dẫn cài đặt chi tiết tại tasks/buoc-2.md)
 
 Kiểm tra cài đặt:
-
+ 
 ```bash
 python --version     # Python 3.10.x trở lên
 git --version
